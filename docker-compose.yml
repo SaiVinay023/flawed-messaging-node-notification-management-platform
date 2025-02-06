@@ -1,0 +1,74 @@
+services:
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - notification-network
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - notification-network
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/notifications
+      - NODE_ENV=development
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - app-network
+
+  processor:
+    build:
+      context: ./processor
+      dockerfile: Dockerfile
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/notifications
+      - REDIS_URI=redis://redis:6379
+      - NODE_ENV=development
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - app-network
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - notification-network
+
+  mock-api:
+    build:
+      context: ./mock-api
+      dockerfile: Dockerfile
+    container_name: mock-api
+    restart: unless-stopped
+    ports:
+      - "1337:1337"
+    networks:
+      - notification-network
+
+networks:
+  notification-network:
+  app-network:
+
+volumes:
+  mongodb_data:

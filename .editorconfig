@@ -1,0 +1,44 @@
+# .editorconfig
+
+# Root EditorConfig file
+root = true
+
+# All files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Indentation style and size for all files
+indent_style = space
+indent_size = 2
+
+# Specific settings for Markdown files
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Specific settings for JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+
+# Specific settings for YAML files
+[*.yml]
+indent_style = space
+indent_size = 2
+
+# Specific settings for JavaScript and JSX files
+[*.js]
+indent_style = space
+indent_size = 2
+
+[*.jsx]
+indent_style = space
+indent_size = 2
+
+# Specific settings for TypeScript files (if applicable)
+[*.ts]
+indent_style = space
+indent_size = 2
