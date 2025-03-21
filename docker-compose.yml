@@ -37,6 +37,8 @@ services:
     build:
       context: ./processor
       dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/notifications
       - REDIS_URI=redis://redis:6379
