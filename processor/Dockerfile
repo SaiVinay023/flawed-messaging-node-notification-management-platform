@@ -8,4 +8,4 @@ RUN npm install --production
 
 COPY . .
 
-CMD ["npm", "start"]
+CMD ["node", "processor.js"]

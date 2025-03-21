@@ -23,6 +23,17 @@ redis.on('error', (err) => {
   console.error('Redis connection error:', err);
 });
 
+// Validation function
+const isValidNotification = (data) => {
+  const { type, recipient, message, campaign_id } = data;
+  return (
+    ["email", "SMS"].includes(type) &&
+    typeof recipient === "string" &&
+    typeof message === "string" &&
+    typeof campaign_id === "string"
+  );
+};
+
 // Routes
 app.get('/', (req, res) => {
   res.send('API Service');
