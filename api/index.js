@@ -4,54 +4,81 @@ const Redis = require('ioredis');
 const { v4: uuidv4 } = require('uuid');
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+//  MongoDB Connection (Fix: Removed deprecated options)
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log(' MongoDB connected'))
+  .catch(err => console.error(' MongoDB connection error:', err));
 
-// Redis connection
-const redis = new Redis('redis://redis:6379');
-redis.on('connect', () => {
-  console.log('Redis connected');
-});
-redis.on('error', (err) => {
-  console.error('Redis connection error:', err);
-});
+//  Redis Connection (Fix: Using LPUSH instead of PUBLISH)
+//const redis = new Redis('redis://redis:6379');
+const redis = new Redis({ host: "redis", port: 6379 });
 
-// Validation function
+
+redis.on('connect', () => console.log(' Redis connected'));
+redis.on('error', (err) => console.error(' Redis connection error:', err));
+
+// Validation Function (Fix: Case-Insensitive Validation)
 const isValidNotification = (data) => {
   const { type, recipient, message, campaign_id } = data;
   return (
-    ["email", "SMS"].includes(type) &&
+    ["email", "sms"].includes(type.toLowerCase()) &&  // Ensures "SMS" or "sms" works
     typeof recipient === "string" &&
     typeof message === "string" &&
     typeof campaign_id === "string"
   );
 };
 
-// Routes
-app.get('/', (req, res) => {
-  res.send('API Service');
+// Health Check Route
+app.get("/api/v1/notifications", async (req, res) => {
+  try {
+    const notifications = await redis.lrange("notification_queue", 0, -1);
+    const parsedNotifications = notifications.map(JSON.parse);
+    
+    res.json({ notifications: parsedNotifications });
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
-// Route to handle POST requests for creating notifications
-app.post('/api/v1/notifications', (req, res) => {
-  const { type, recipient, message, campaign_id } = req.body;
+// POST: Create a Notification
+app.post('/api/v1/notifications', async (req, res) => {
+  try {
+    const { type, recipient, message, campaign_id } = req.body;
 
-  const notification = { type, recipient, message, campaign_id };
-  redis.publish('notifications', JSON.stringify(notification));
+    // Validate the request
+    if (!isValidNotification(req.body)) {
+      return res.status(400).json({ error: 'Invalid request format' });
+    }
 
-  // Here you can add logic to handle the notification, e.g., save to MongoDB, send to Redis, etc.
-  console.log(`Received notification: ${type}, ${recipient}, ${message}, ${campaign_id}`);
+    // Generate unique ID & store in Redis queue
+    const notification = {
+      id: uuidv4(),
+      type,
+      recipient,
+      message,
+      campaign_id,
+      status: "queued",
+      createdAt: new Date().toISOString()
+    };
 
-  res.status(201).send({ message: 'Notification created successfully' });
+    await redis.lpush('notification_queue', JSON.stringify(notification));
+
+    console.log(`Notification queued: ${JSON.stringify(notification)}`);
+    res.status(202).json({ message: 'Notification created successfully', notification });
+
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
-app.listen(port, () => {
-  console.log(`API service listening at http://localhost:${port}`);
+// Start the server
+app.listen(PORT, () => {
+  console.log(` API Service running at http://localhost:${PORT}`);
 });
