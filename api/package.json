@@ -1,0 +1,19 @@
+{
+    "name": "api",
+    "version": "1.0.0",
+    "description": "API service for the notification management platform",
+    "main": "index.js",
+    "scripts": {
+      "start": "node index.js"
+    },
+    "dependencies": {
+      "express": "^4.17.1",
+      "mongoose": "^5.10.9",
+      "ioredis": "^5.3.2",
+      "uuid": "^9.0.1"
+
+    },
+    "devDependencies": {},
+    "author": "",
+    "license": "ISC"
+  }
