@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mongodb:
     image: mongo:latest
@@ -28,12 +30,15 @@ services:
       - mongodb
       - redis
     networks:
-      - app-network
+      - notification-network
+    restart: unless-stopped
 
   processor:
     build:
       context: ./processor
       dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/notifications
       - REDIS_URI=redis://redis:6379
@@ -42,7 +47,7 @@ services:
       - mongodb
       - redis
     networks:
-      - app-network
+      - notification-network
 
   dashboard:
     build:
@@ -50,6 +55,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
+    volumes:
+    - ./dashboard/nginx.conf:/etc/nginx/conf.d/default.conf  # Mount nginx.conf  
     depends_on:
       - api
     networks:
@@ -68,7 +75,6 @@ services:
 
 networks:
   notification-network:
-  app-network:
 
 volumes:
   mongodb_data:

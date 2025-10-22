@@ -1,0 +1,21 @@
+{
+    "name": "processor",
+    "version": "1.0.0",
+    "description": "Processor service for the notification management platform",
+    "main": "index.js",
+    "scripts": {
+      "start": "node processor.js"
+    },
+    "dependencies": {
+      "express": "^4.17.1",
+      "mongoose": "^5.10.9",
+      "redis": "^3.0.2",
+      "axios": "^1.4.0",
+      "ioredis": "^5.3.2",
+      "uuid": "^9.0.1",
+      "opossum": "^5.0.0" 
+    },
+    "devDependencies": {},
+    "author": "",
+    "license": "ISC"
+  }
